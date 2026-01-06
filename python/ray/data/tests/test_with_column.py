@@ -1657,6 +1657,41 @@ def test_with_column_async_generator_udf_multiple_yields(ray_start_regular_share
     assert rows_same(result_df, expected_after_fix)
 
 
+@pytest.mark.skipif(
+    get_pyarrow_version() < parse_version("20.0.0"),
+    reason="with_column requires PyArrow >= 20.0.0",
+)
+@pytest.mark.parametrize(
+    "test_data, expr_factory, expected_results, test_id",
+    [
+        # Test isNaN
+        pytest.param(
+            [{"x": float("Nan")}, {"x": -3}, {"x": 0}],
+            lambda: col("x").is_nan(),
+            [True, False, False],
+            "is_nan",
+        ),
+    ],
+)
+def test_with_column_null_handling_operations(
+    ray_start_regular_shared,
+    test_data,
+    expr_factory,
+    expected_results,
+    test_id,
+):
+    """Test arithmetic helper expressions: negate, sign, power, abs."""
+    ds = ray.data.from_items(test_data)
+    expr = expr_factory()
+    result_df = ds.with_column("result", expr).to_pandas()
+
+    # Create expected dataframe
+    expected_df = pd.DataFrame(test_data)
+    expected_df["result"] = expected_results
+
+    assert rows_same(result_df, expected_df)
+
+
 if __name__ == "__main__":
     import sys
 

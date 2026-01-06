@@ -565,6 +565,10 @@ class Expr(ABC):
         """
         return _create_pyarrow_compute_udf(pc.abs_checked)(self)
 
+    # NULL Handling
+    def is_nan(self) -> "UDFExpr":
+        return _create_pyarrow_compute_udf(pc.is_nan)(self)
+
     @property
     def list(self) -> "_ListNamespace":
         """Access list operations for this expression.
